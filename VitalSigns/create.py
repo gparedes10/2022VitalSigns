@@ -265,11 +265,13 @@ def racdiv(df, columnsToInclude):
 
   #Get hisp table and Indicators
   #'hisp' script HAS to be imported for this script to work.
-  if(int(year)) <= 19:
-    fi_hisp = createAcsIndicator(state, county, tract, year, tableId = 'B03002',
-                      mergeUrl = 'https://raw.githubusercontent.com/gparedes10/VitaSigns2019Replica/main/CSA2010.csv', 
+  #User has to re-enter the year they want the indicator for. Maybe there is a way to automate this input???
+  chosen_year = str(input("Please enter your chosen year again (i.e., '17', '20'): "))
+  if(int(chosen_year)) <= 19:
+    fi_hisp = createAcsIndicator(state = '24', county = '510', tract = '*' , year = chosen_year, tableId = 'B03002',
+                      mergeUrl = 'https://raw.githubusercontent.com/gparedes10/2022VitalSigns/main/CSA_2010_and_2020.csv', 
                       merge_left_col = 'tract',
-                      merge_right_col = 'TRACTCE10',
+                      merge_right_col = 'TRACTCE',
                       merge_how = 'outer',
                       groupBy = 'CSA2010',
                       aggMethod= 'sum', 
@@ -277,8 +279,8 @@ def racdiv(df, columnsToInclude):
                       columnsToInclude = [],
                       finalFileName=False)
   else:
-    fi_hisp = createAcsIndicator(state, county, tract, year, tableId = 'B03002',
-                      mergeUrl = 'https://raw.githubusercontent.com/gparedes10/VitaSigns2019Replica/main/CSA2020.csv', 
+    fi_hisp = createAcsIndicator(state = '24', county = '510', tract = '*' , year = chosen_year, tableId = 'B03002',
+                      mergeUrl = 'https://raw.githubusercontent.com/gparedes10/2022VitalSigns/main/CSA_2010_and_2020.csv', 
                       merge_left_col = 'tract',
                       merge_right_col = 'TRACTCE',
                       merge_how = 'outer',
@@ -290,7 +292,7 @@ def racdiv(df, columnsToInclude):
 
   #Column 012E from the Hisp table has a different name on the years prior to 2019. 
   #This  code changes the name of that column automatically for every year prior to 2019.
-  if(int(year)) < 19:
+  if(int(chosen_year)) < 19:
     fi_hisp.rename(columns = {'B03002_012E_Total_Hispanic_or_Latino':'B03002_012E_Total:_Hispanic_or_Latino:'}, inplace = True)
 
   
@@ -1097,6 +1099,40 @@ def sclemp( df, columnsToInclude ):
 
   return fi
 
+
+# Cell
+#@title Run This Cell: Create hhpov
+
+#Table ID: B17017
+#Table Name: Poverty status in the past 12 months by household type by age of householder
+#Indicator Output: Percent of Family Households Living Below the Poverty Line
+
+def hhpov( df, columnsToInclude ):
+  fi = pd.DataFrame()
+
+  columns = df.filter(regex='003E|001E|tract').columns.values  #These are the columns that will show up in the final table (createAcsIndicators) 
+  columns = numpy.append(columns, columnsToInclude)                 #'tract' HAS to be there
+
+  for col in columns:
+      fi = addKey(df, fi, col)
+
+  fi['hhpovXX']  = ( df.filter(regex='003E').sum(axis=1)
+) / ( df.filter(regex='001E').sum(axis=1) - (df.filter(regex='020E').sum(axis=1)) - (df.filter(regex='049E').sum(axis=1))  #substract non-family households from the total
+) * 100
+
+  #Baltimore city is tract 10000. Since it has a tract number, it was added to the CSA csv file and the code calculates its 'final' value automatically.
+  #Do not remove any row before calculating Baltimore City's 'final,' or the value will be affected.
+ 
+  #Delete "Unassigned--Jail" row -> tract 100300
+  fi = fi[fi.tract != 100300]
+
+  #Move Baltimore City row to the bottom of the list.
+  bc = fi.loc['Baltimore City'] #save Baltimore City row
+  fi = fi.drop(fi.index[1]) #Remove baltimore City row from fi based on index location - its index location is 1 for both 2010 and 2020 indicators.
+  fi.loc['Baltimore City'] = bc
+
+  return fi
+  
 
 # Cell
 #@title Run This Cell: Create hhchpov
