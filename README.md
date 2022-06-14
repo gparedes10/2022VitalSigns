@@ -52,7 +52,7 @@ VitalSigns uses functions found in our Dataplay Module and vice-versa.
 
 The code is on <a href="https://pypi.org/project/VitalSigns2022TEST/">PyPI</a> so you can install the scripts as a python library using the command:
 ```
-!pip install VitalSigns2022TEST dataplay geopandas`
+!pip install VitalSigns2022TEST dataplay geopandas
 ```
 
 ### Import Modules
