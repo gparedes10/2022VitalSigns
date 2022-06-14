@@ -51,8 +51,9 @@ VitalSigns uses functions found in our Dataplay Module and vice-versa.
 ### Install the Package
 
 The code is on <a href="https://pypi.org/project/VitalSigns2022TEST/">PyPI</a> so you can install the scripts as a python library using the command:
-
-`!pip install VitalSigns2022TEST dataplay geopandas`
+```
+!pip install VitalSigns2022TEST dataplay geopandas`
+```
 
 ### Import Modules
 
@@ -88,7 +89,8 @@ import VitalSigns.acsDownload
 help(VitalSigns.acsDownload.retrieve_acs_data)
 ```
 
-## Examples
+## Example #1 
+Follow this process for all VitalSigns scripts, with the exception of the ractiv indicator (shown in Example #2)
 
 ### ACS Download
 
@@ -105,8 +107,8 @@ from VitalSigns.acsDownload import retrieve_acs_data
 Read in some data.
 ```
 #Define our download parameters (tract, county, state, tableId, and state)
-#Our download function will use Baltimore City's tract, county and state as internal paramters
-#Change these values in the cell below using different geographic reference codes will change those parameters
+#Our download function will use Baltimore City's tract, county and state as internal parameters
+#Changing these values using different geographic reference codes will change those parameters
 
 tract = '*'
 county = '510'
@@ -122,7 +124,7 @@ df = retrieve_acs_data(state, county, tract, tableId, year)
 df.head(2)
 ```
 
-Save the ACS data (Use this ONLY if you are working in Google Colab. Otherwise, you can save the data however you prefer)
+Save the ACS data (Use this method ONLY if you are working in Google Colab. Otherwise, you can save the data however you prefer)
 ```
 from google.colab import files
 df.to_csv('YourFileName.csv') 
@@ -164,7 +166,95 @@ MyIndicator = createAcsIndicator(state, county, tract, year, tableId,
 MyIndicator.head(2)
 ```
 
-Now we can save the Baltimore City indicators (Use this ONLY if you are working in Google Colab. Otherwise, you can save the data however you prefer)
+Now we can save the Baltimore City indicators (Use this method ONLY if you are working in Google Colab. Otherwise, you can save the data however you prefer)
+```
+from google.colab import files
+MyIndicator.to_csv('YourIndicatorFileName.csv') 
+files.download('YourIndicatorFileName.csv')
+```
+
+## Example #2 (racdiv indicator)
+The Racial Diversity Index (racdiv) indicator is the only script in our library that relies on two ACS tables. 
+Due to this difference, this is the only script that will ask the user for an input while the script is running (the user needs to re-enter the year)
+
+Lets follow the same process we did during example #1
+### ACS Download
+
+Install the package.
+```
+!pip install VitalSigns2022TEST dataplay geopandas
+```
+
+Import your modules.
+```
+from VitalSigns.acsDownload import retrieve_acs_data
+```
+
+Read in some data.
+```
+tract = '*'
+county = '510'
+state = '24'
+
+tableId = 'B02001'
+year = '19' #This is the number that the user NEEDS to re-enter once the script asks for an input
+```
+
+And download the Baltimore City ACS data using the imported VitalSigns library.
+```
+df = retrieve_acs_data(state, county, tract, tableId, year)
+df.head(2)
+```
+
+Save the ACS data (Use this method ONLY if you are working in Google Colab. Otherwise, you can save the data however you prefer)
+```
+from google.colab import files
+df.to_csv('YourFileName.csv') 
+files.download('YourFileName.csv')
+```
+### ACS Calculations and Indicators
+To see the table IDs, Names, and their respective indicators again, click here --ADD LINK HERE--
+
+Import the racdiv script 
+```
+#Script to create the Racial Diversity Index indicator.
+from VitalSigns.create import createAcsIndicator, racdiv 
+```
+
+Once the script has been imported, we can now create the Baltimore City indicators.
+```
+mergeUrl = 'https://raw.githubusercontent.com/gparedes10/2022VitalSigns/main/CSA_2010_and_2020.csv'
+merge_left_col = 'tract'
+merge_right_col= 'TRACTCE' 
+merge_how = 'outer'
+
+groupBy = 'CSA2010'     #For the 2020 CSAs use 'CSA2020', for 2010 CSAs use 'CSA2010'
+
+method = racdiv
+aggMethod = 'sum'
+columnsToInclude = []
+
+
+MyIndicator = createAcsIndicator(state, county, tract, year, tableId,
+                    mergeUrl, merge_left_col, merge_right_col, merge_how, groupBy,
+                    aggMethod, method, columnsToInclude, finalFileName=False)
+
+MyIndicator.head(2)
+```
+
+The cell below shows the output while the racdiv script is being run. As you can see on the last line, the script asks the user to re-enter their chosen year. After re-entering the year, the script will finish running, and the racdiv indicator table will be completed.
+```
+Table: B02001, Year: 19 imported.
+Index(['TRACTCE', 'GEOID10', 'CSA2010', 'GEOID', 'CSA2020'], dtype='object')
+Merge file imported
+Both are now merged.
+Aggregating...
+Aggregated
+Creating Indicator
+Please enter your chosen year again (i.e., '17', '20'): 
+```
+
+Now we can save the Baltimore City indicators (Use this method ONLY if you are working in Google Colab. Otherwise, you can save the data however you prefer)
 ```
 from google.colab import files
 MyIndicator.to_csv('YourIndicatorFileName.csv') 
