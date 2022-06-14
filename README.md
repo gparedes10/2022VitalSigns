@@ -1,5 +1,3 @@
-TESTING NEW 2022 SCRIPTS.
-
 # Vital Signs
 > Scripts to create our annual, publicly-available, community-focused datasets; for Baltimore City.
 
